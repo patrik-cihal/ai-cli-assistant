@@ -1,4 +1,4 @@
-use std::{error::Error, io::stdout, fmt::Display};
+use std::{error::Error, io::stdout, fmt::Display, fs};
 
 use async_openai::{
     types::{
@@ -75,29 +75,6 @@ async fn query_chat(question: String, system_prompt: String, model: String) -> R
     Ok(())
 }
 
-#[derive(Debug)]
-enum AIAssistantErrors {
-    TemplateNotFound(String)
-}
-
-impl Display for AIAssistantErrors {
-    fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        match &self {
-            AIAssistantErrors::TemplateNotFound(template_name) => write!(f, "the template {template_name} could not be found, use 'create_template' command if you haven't created it yet"),
-        }
-    }
-}
-
-impl Error for AIAssistantErrors {
-    fn source(&self) -> Option<&(dyn Error + 'static)> {
-        None
-    }
-    
-    fn cause(&self) -> Option<&dyn Error> {
-        self.source()
-    }
-}
-
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
@@ -105,7 +82,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
     match cli.command {
         Commands::Ask{question, template} => {
             let system_prompt = if let Some(template_name) = template {
-                std::fs::read_to_string(format!("templates/{template_name}.txt")).map_err(|_| AIAssistantErrors::TemplateNotFound(template_name))?
+                fs::read_to_string(format!("templates/{template_name}.txt"))?
             }
             else {
                 "You are an AI assistant running as CLI tool.".into()
@@ -113,7 +90,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
             query_chat(question, system_prompt, "gpt-3.5-turbo".into()).await?;
         },
         Commands::CreateTemplate { template_name, content } => {
-            std::fs::write(format!("templates/{template_name}.txt"), content)?;
+            let target_dir = dirs::home_dir().unwrap().join(".ai-cli-assistant/templates/");
+            if !target_dir.exists() {
+                fs::create_dir_all(target_dir.clone())?;
+            }
+
+            let template_path = target_dir.join(format!("{template_name}.txt"));
+            fs::write(template_path, content)?;
+            println!("Template created successfuly!");
         }
     }
 
