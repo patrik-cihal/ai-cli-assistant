@@ -79,10 +79,12 @@ async fn query_chat(question: String, system_prompt: String, model: String) -> R
 async fn main() -> Result<(), Box<dyn Error>> {
     let cli = Cli::parse();
 
+    let templates_dir = dirs::home_dir().unwrap().join(".ai-cli-assistant/templates/");
+
     match cli.command {
         Commands::Ask{question, template} => {
             let system_prompt = if let Some(template_name) = template {
-                fs::read_to_string(format!("templates/{template_name}.txt"))?
+                fs::read_to_string(templates_dir.join(format!("{template_name}.txt")))?
             }
             else {
                 "You are an AI assistant running as CLI tool.".into()
@@ -90,12 +92,11 @@ async fn main() -> Result<(), Box<dyn Error>> {
             query_chat(question, system_prompt, "gpt-3.5-turbo".into()).await?;
         },
         Commands::CreateTemplate { template_name, content } => {
-            let target_dir = dirs::home_dir().unwrap().join(".ai-cli-assistant/templates/");
-            if !target_dir.exists() {
-                fs::create_dir_all(target_dir.clone())?;
+            if !templates_dir.exists() {
+                fs::create_dir_all(templates_dir.clone())?;
             }
 
-            let template_path = target_dir.join(format!("{template_name}.txt"));
+            let template_path = templates_dir.join(format!("{template_name}.txt"));
             fs::write(template_path, content)?;
             println!("Template created successfuly!");
         }
