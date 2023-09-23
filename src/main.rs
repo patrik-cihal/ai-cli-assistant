@@ -22,6 +22,8 @@ enum Commands {
         question: String,
         #[clap(short, long)]
         template: Option<String>,
+        #[clap(short, long)]
+        model: Option<String>
     },
 }
 
@@ -82,14 +84,14 @@ async fn main() -> Result<(), Box<dyn Error>> {
     let templates_dir = dirs::home_dir().unwrap().join(".ai-cli-assistant/templates/");
 
     match cli.command {
-        Commands::Ask{question, template} => {
+        Commands::Ask{question, template, model} => {
             let system_prompt = if let Some(template_name) = template {
                 fs::read_to_string(templates_dir.join(format!("{template_name}.txt")))?
             }
             else {
                 "You are an AI assistant running as CLI tool.".into()
             };
-            query_chat(question, system_prompt, "gpt-3.5-turbo".into()).await?;
+            query_chat(question, system_prompt, model.unwrap_or("gpt-3.5-turbo".into())).await?;
         },
         Commands::CreateTemplate { template_name, content } => {
             if !templates_dir.exists() {
