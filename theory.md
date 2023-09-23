@@ -13,3 +13,5 @@ Faster machine control.
 `ai --template "custom_template" "question"` -> `"intelligent response with templated system prompt"`
 
 `ai --system "description of system state reachable by executing system cmds"` -> `target system state (hopefully)`
+
+`ai --create_template "new_template_name" content`
