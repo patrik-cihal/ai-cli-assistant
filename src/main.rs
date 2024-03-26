@@ -91,7 +91,7 @@ async fn main() -> Result<(), Box<dyn Error>> {
             else {
                 "You are an AI assistant running as CLI tool.".into()
             };
-            query_chat(question, system_prompt, model.unwrap_or("gpt-3.5-turbo".into())).await?;
+            query_chat(question, system_prompt, model.unwrap_or("gpt-4-0125-preview".into())).await?;
         },
         Commands::CreateTemplate { template_name, content } => {
             if !templates_dir.exists() {
@@ -103,6 +103,8 @@ async fn main() -> Result<(), Box<dyn Error>> {
             println!("Template created successfuly!");
         }
     }
+
+    
 
     Ok(())
 }
